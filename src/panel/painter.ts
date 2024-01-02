@@ -3,10 +3,13 @@ import {
   PointArray,
   SVG,
   Svg,
+  Text,
+  G,
   ArrayXY,
   Polygon,
   Circle,
   Polyline,
+  Rect,
 } from "@svgdotjs/svg.js";
 export interface PainterOptions {
   root: HTMLElement;
@@ -19,6 +22,7 @@ export class Painter {
   private draw: Svg;
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
+  private infoText: G | null = null;
   public init(opts: PainterOptions) {
     const { canvas, svg, root } = opts;
     const { width, height } = root.getBoundingClientRect();
@@ -28,11 +32,14 @@ export class Painter {
     this.canvas.setAttribute("width", width.toString());
     this.canvas.setAttribute("height", height.toString());
     this.ctx = this.canvas.getContext("2d");
-
     this.draw = SVG().addTo(svg).size(this.width, this.height);
+    this.draw.on("click", (e: PointerEvent) => {
+      e.stopPropagation();
+      this.removeInfoText();
+    });
     this.reset();
-    // var rect = this.draw.rect(100, 100).attr({ fill: "#f06" });
-    const points = new PointArray([0, 0, 100, 50, 200, 0]);
+
+    const points = new PointArray([0, 0, 100, 50, width - 10, 0]);
     this.drawLines(points);
   }
   private dotRadius = 6;
@@ -94,21 +101,56 @@ export class Painter {
 
     points.forEach((point) => {
       const item = this.draw.circle(this.dotRadius);
+      item.on("click", (e: PointerEvent) => {
+        e.stopPropagation();
+        this.removeInfoText();
+        let info = `${point.join(", ")}`;
+
+        const text = this.draw
+          .plain(info)
+          .stroke({ color: "red", width: 1 })
+          .move(0, 0);
+
+        const rect = text.node.getBoundingClientRect();
+        const bg = this.draw.rect(rect.width, rect.height).fill("white");
+        this.infoText = this.draw.group().add(bg).add(text).stroke("white");
+
+        const offset = 6;
+        let x = point[0] + offset;
+        x = Math.min(x, this.width - rect.width);
+        let y = point[1] + offset;
+        y = Math.min(y, this.height - rect.height);
+        this.infoText.move(x, y);
+        this.infoText.on("click", (e: PointerEvent) => {
+          e.stopPropagation();
+        });
+      });
+      item.css({ cursor: "pointer" });
       this.circles.push(item);
       item
         .move(point[0] - this.dotRadius / 2, point[1] - this.dotRadius / 2)
         .fill("yellow");
     });
   }
+  private removeInfoText() {
+    if (this.infoText) {
+      this.infoText.remove();
+    }
+    this.infoText = null;
+  }
   private reset() {
     this.draw.clear();
   }
   private imageWidth: number = 1;
   private imageHeight: number = 1;
+  public hasImageData: boolean = false;
   public async drawImage(data: ArrayBuffer): Promise<HTMLImageElement> {
+    this.hasImageData = true;
+    this.reset();
     const base64String = Base64.transformArrayBuffer(data);
     const fullBase64 = Base64.fillHead(base64String, "png");
     const imgData = await Base64.convertToImageData(fullBase64);
+    this.ctx.clearRect(0, 0, this.width, this.height);
     this.ctx.drawImage(imgData, 0, 0, imgData.width, imgData.height);
     this.imageWidth = imgData.width;
     this.imageHeight = imgData.height;
