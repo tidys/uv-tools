@@ -39,8 +39,10 @@ export class Painter {
     });
     this.reset();
 
-    const points = new PointArray([0, 0, 100, 50, width - 10, 0]);
-    this.drawLines(points);
+    if (false) {
+      const points = new PointArray([0, 0, 100, 50, width - 10, 0]);
+      this.drawLines(points);
+    }
   }
   private dotRadius = 6;
   private polygon: Polyline;
