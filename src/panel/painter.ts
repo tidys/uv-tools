@@ -23,6 +23,17 @@ export class Painter {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private infoText: G | null = null;
+  private _visiblePoint: boolean = true;
+  public visiblePoint(b: boolean) {
+    this._visiblePoint = b;
+    this.circles.forEach((item) => {
+      if (b) {
+        item.show();
+      } else {
+        item.hide();
+      }
+    });
+  }
   public init(opts: PainterOptions) {
     const { canvas, svg, root } = opts;
     const { width, height } = root.getBoundingClientRect();
@@ -90,6 +101,7 @@ export class Painter {
     this.drawLines(pointArray);
     return true;
   }
+  public polygonLineWidth: number = 2;
   private drawLines(points: PointArray) {
     if (this.polygon) {
       this.polygon.remove();
@@ -99,9 +111,12 @@ export class Painter {
       this.circles = [];
     }
     this.polygon = this.draw.polyline(points);
-    this.polygon.fill("none").stroke({ width: 2, color: "red" });
-
+    this.polygon
+      .fill("none")
+      .stroke({ width: this.polygonLineWidth, color: "red" });
+    let index = 0;
     points.forEach((point) => {
+      console.log(`${++index}: ${point[0]}, ${point[1]}`);
       const item = this.draw.circle(this.dotRadius);
       item.on("click", (e: PointerEvent) => {
         e.stopPropagation();
@@ -133,6 +148,7 @@ export class Painter {
         .move(point[0] - this.dotRadius / 2, point[1] - this.dotRadius / 2)
         .fill("yellow");
     });
+    this.visiblePoint(this._visiblePoint);
   }
   private removeInfoText() {
     if (this.infoText) {
