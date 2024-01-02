@@ -146,11 +146,9 @@ export class Painter {
   private imageWidth: number = 1;
   private imageHeight: number = 1;
   public hasImageData: boolean = false;
-  public async drawImage(data: ArrayBuffer): Promise<HTMLImageElement> {
+  public async drawImage(fullBase64: string): Promise<HTMLImageElement> {
     this.hasImageData = true;
     this.reset();
-    const base64String = Base64.transformArrayBuffer(data);
-    const fullBase64 = Base64.fillHead(base64String, "png");
     const imgData = await Base64.convertToImageData(fullBase64);
     this.ctx.clearRect(0, 0, this.width, this.height);
     this.ctx.drawImage(imgData, 0, 0, imgData.width, imgData.height);

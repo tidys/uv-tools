@@ -30,7 +30,7 @@
         flex: 1;
         height: 100%;
         display: flex;
-        border-left: solid 1px black; 
+        border-left: solid 1px black;
         flex-direction: column;
       "
     >
@@ -70,6 +70,7 @@ import ccui from "@xuyanfeng/cc-ui";
 import { painter } from "./painter";
 import { Accept, Drop } from "cc-plugin/src/ccp/util/drop";
 import profile, { Profile } from "cc-plugin/src/ccp/profile";
+import { Base64 } from "cc-plugin/src/ccp/util/base64";
 import CCP from "cc-plugin/src/ccp/entry-render";
 const { CCInput, CCButton, CCTextarea, CCProp, CCInputNumber } =
   ccui.components;
@@ -77,13 +78,20 @@ const KEY_VERTICES = "vertices";
 const KEY_VERTICES_OFFSET = "verticesOffset";
 const KEY_VERTICES_STEP = "verticesStep";
 const KEY_VERTICES_COUNT = "verticesCount";
-
+const KEY_IMAGE = "image";
 export default defineComponent({
   name: "index",
   components: { CCButton, CCTextarea, CCProp, CCInputNumber },
   setup(props, { emit }) {
     const svg = ref<HTMLElement>(null);
     const rootEl = ref<HTMLElement>(null);
+
+    function updateImage(base64: string) {
+      if (!base64) return;
+      painter.drawImage(base64).then((el) => {
+        msg.value = `width:${el.width},height:${el.height}`;
+      });
+    }
     onMounted(() => {
       if (!svg.value || !canvas.value || !rootEl.value) return;
       painter.init({
@@ -91,6 +99,9 @@ export default defineComponent({
         canvas: canvas.value as HTMLCanvasElement,
         svg: svg.value as HTMLElement,
       });
+
+      const imageData = saveData[KEY_IMAGE];
+      updateImage(imageData);
     });
     const msg = ref(`拖拽纹理到这里`);
     const canvas = ref<HTMLCanvasElement>(null);
@@ -162,9 +173,12 @@ export default defineComponent({
           multi: true,
           accept: [Accept.JSON, Accept.Texture],
           texture(name, data: ArrayBuffer) {
-            painter.drawImage(data).then((el) => {
-              msg.value = `width:${el.width},height:${el.height}`;
-            });
+            const base64String = Base64.transformArrayBuffer(data);
+            const fullBase64 = Base64.fillHead(base64String, "png");
+
+            saveData[KEY_IMAGE] = fullBase64;
+            profile.save(saveData);
+            updateImage(fullBase64);
           },
         });
         drop.onWeb(event);
