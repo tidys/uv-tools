@@ -34,7 +34,7 @@ jobs:
       - name: install
         run: npm run installForce
 
-      - name: pack web no export
+      - name: pack web
         run: npm run ccp-pack-web
       - name: DeployWithDeleteLatestResult
         uses: peaceiris/actions-gh-pages@v3
@@ -42,7 +42,7 @@ jobs:
           personal_token: ${{ secrets.PERSONAL_TOKEN }}
           publish_dir: ./web
           external_repository: tidys/uv-tools
-          publish_branch: main
+          publish_branch: gh-pages
           keep_files: true
           exclude_assets: '*.js,*.css'
       - name: DeployJsCss
@@ -51,6 +51,28 @@ jobs:
           personal_token: ${{ secrets.PERSONAL_TOKEN }}
           publish_dir: ./web
           external_repository: tidys/uv-tools
-          publish_branch: main
+          publish_branch: gh-pages
           keep_files: true
           exclude_assets: ''
+      - name: Sync to Gitee
+        uses: wearerequired/git-mirror-action@master
+        env:
+            SSH_PRIVATE_KEY: ${{ secrets.GITEE_RSA_PRIVATE_KEY }}
+        with:
+            # 注意替换为你的 GitHub 源仓库地址
+            source-repo: "git@github.com:tidys/uv-tools.git"
+            destination-repo: "git@gitee.com:tidys/uv-tools.git"
+      - name: Gitee Pages Action
+        # uses: yanglbme/gitee-pages-action@a813811f52ed4f53010702a528b72053bd04685f
+        uses: yanglbme/gitee-pages-action@main
+        with:
+            # The Gitee username, like yanglbme
+            gitee-username: ${{ secrets.GITEE_REPO }} # optional
+            # The Gitee password
+            gitee-password: ${{ secrets.GITEE_PWD }} # optional
+            # The Gitee repository, like doocs/leetcode
+            gitee-repo:  tidys/uv-tools
+            # Which branch to build
+            branch: gh-pages # optional, default is master
+            # Use force https or not
+            https: false # optional, default is true    
