@@ -4,7 +4,7 @@ name: Deploy static content to Pages
 on:
   # Runs on pushes targeting the default branch
   push:
-    branches: ["cc-plugin-adaption"]
+    branches: ["main"]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -35,13 +35,13 @@ jobs:
         run: npm run installForce
 
       - name: pack web no export
-        run: npm run ccp-pack-export-no
+        run: npm run ccp-pack-web
       - name: DeployWithDeleteLatestResult
         uses: peaceiris/actions-gh-pages@v3
         with:
           personal_token: ${{ secrets.PERSONAL_TOKEN }}
           publish_dir: ./web
-          external_repository: tidys/bmfont-online
+          external_repository: tidys/uv-tools
           publish_branch: main
           keep_files: true
           exclude_assets: '*.js,*.css'
@@ -50,7 +50,7 @@ jobs:
         with:
           personal_token: ${{ secrets.PERSONAL_TOKEN }}
           publish_dir: ./web
-          external_repository: tidys/bmfont-online
+          external_repository: tidys/uv-tools
           publish_branch: main
           keep_files: true
           exclude_assets: ''
