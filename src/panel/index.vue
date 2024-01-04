@@ -122,7 +122,7 @@ export default defineComponent({
       const imageData = saveData[KEY_IMAGE];
       updateImage(imageData);
     });
-    const msg = ref(`拖拽纹理到这里`);
+    const msg = ref(`拖拽纹理图片到这里`);
     const canvas = ref<HTMLCanvasElement>(null);
 
     const saveData = profile.load("uv-tools.json");
