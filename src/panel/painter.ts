@@ -1,16 +1,5 @@
 import { Base64 } from "cc-plugin/src/ccp/util/base64";
-import {
-  PointArray,
-  SVG,
-  Svg,
-  Text,
-  G,
-  ArrayXY,
-  Polygon,
-  Circle,
-  Polyline,
-  Rect,
-} from "@svgdotjs/svg.js";
+import { PointArray, SVG, Svg, Text, G, ArrayXY, Polygon, Circle, Polyline, Rect } from "@svgdotjs/svg.js";
 export interface PainterOptions {
   root: HTMLElement;
   canvas: HTMLCanvasElement;
@@ -38,8 +27,8 @@ export class Painter {
     const { canvas, svg, root } = opts;
     const { width, height } = root.getBoundingClientRect();
     this.width = width;
-    this.height = height;
     this.canvas = canvas;
+    this.height = height;
     this.canvas.setAttribute("width", width.toString());
     this.canvas.setAttribute("height", height.toString());
     this.ctx = this.canvas.getContext("2d");
@@ -51,8 +40,8 @@ export class Painter {
     this.reset();
 
     if (false) {
-      const points = new PointArray([0, 0, 100, 50, width - 10, 0]);
-      this.drawLines(points);
+      //   const points = new PointArray([0, 0, 100, 50, width - 10, 0]);
+      //   this.drawLines(points);
     }
   }
   private dotRadius = 6;
@@ -65,20 +54,23 @@ export class Painter {
    * @param offset 偏移量
    * @param len 数据的长度
    */
-  public updatePoints(
-    str: string,
-    step: number = 4,
-    offset: number = 2,
-    len: number = 2
-  ): boolean {
-    const points: number[] = str.split(",").map((item) => Number(item));
+  public updatePoints(str: string, step: number = 4, offset: number = 2, len: number = 2): boolean {
+    const points: number[] = [];
+    str.split(",").map((item) => {
+      if (item.startsWith("\n")) {
+        item = item.substring(1, item.length);
+      }
+      if (item) {
+        points.push(Number(item));
+      }
+    });
     const maxLen = points.length;
     if (maxLen % step !== 0) {
       console.error("数据长度必须能被step整除");
       return false;
     }
 
-    const newPoint = [];
+    const newPoint: number[] = [];
     let curIndex = 0;
     // step by step
     while (curIndex < maxLen) {
@@ -111,9 +103,7 @@ export class Painter {
       this.circles = [];
     }
     this.polygon = this.draw.polyline(points);
-    this.polygon
-      .fill("none")
-      .stroke({ width: this.polygonLineWidth, color: "red" });
+    this.polygon.fill("none").stroke({ width: this.polygonLineWidth, color: "red" });
     let index = 0;
     points.forEach((point) => {
       console.log(`${++index}: ${point[0]}, ${point[1]}`);
@@ -121,12 +111,10 @@ export class Painter {
       item.on("click", (e: PointerEvent) => {
         e.stopPropagation();
         this.removeInfoText();
-        let info = `${point.join(", ")}`;
+        let info = `x:${point[0]}, y:${point[1]}\n`;
+        info += `u:${point[0] / this.imageWidth}, v:${point[1] / this.imageHeight}`;
 
-        const text = this.draw
-          .plain(info)
-          .stroke({ color: "red", width: 1 })
-          .move(0, 0);
+        const text = this.draw.text(info).stroke({ color: "red", width: 1 }).move(0, 0);
 
         const rect = text.node.getBoundingClientRect();
         const bg = this.draw.rect(rect.width, rect.height).fill("white");
@@ -144,9 +132,7 @@ export class Painter {
       });
       item.css({ cursor: "pointer" });
       this.circles.push(item);
-      item
-        .move(point[0] - this.dotRadius / 2, point[1] - this.dotRadius / 2)
-        .fill("yellow");
+      item.move(point[0] - this.dotRadius / 2, point[1] - this.dotRadius / 2).fill("yellow");
     });
     this.visiblePoint(this._visiblePoint);
   }
