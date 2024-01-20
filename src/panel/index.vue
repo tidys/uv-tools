@@ -2,11 +2,12 @@
   <div class="panel">
     <div
       ref="rootEl"
-      style="position: relative; flex: 1"
+      style="position: relative; flex: 1; overflow: hidden"
       @drop.prevent="drop"
       @dragover.prevent.stop
       @dragenter.prevent.stop
       @dragleave.prevent
+      @mousedown="onMouseDown"
     >
       <canvas ref="canvas" style="position: absolute; z-index: 1"></canvas>
       <div
@@ -43,9 +44,10 @@
           :min="0.1"
           :step="0.1"
           @change="onChangePolygonLineWidth"
-        ></CCInputNumber>
+        >
+        </CCInputNumber>
       </CCProp>
-      <CCProp name="step" tooltip="一组顶点数据的长度">
+      <CCProp name="step" tooltip="一组顶点数据的长度，通常是count的倍数">
         <CCInputNumber
           :min="1"
           :step="1"
@@ -53,13 +55,14 @@
           @change="onVertexStepChange"
         ></CCInputNumber>
       </CCProp>
-      <CCProp name="offset" tooltip="UV顶点的偏移量">
+      <CCProp name="offset" tooltip="UV顶点在一组数据中的偏移量">
         <CCInputNumber
           :min="0"
           :step="1"
           v-model:value="vertexOffset"
           @change="onVertexOffsetChange"
-        ></CCInputNumber>
+        >
+        </CCInputNumber>
       </CCProp>
       <CCProp name="count" tooltip="UV顶点的数量">
         <CCInputNumber
@@ -142,6 +145,11 @@ export default defineComponent({
       canvas,
       step,
       msg,
+      onMouseDown(event: MouseEvent) {
+        // 如果是右键
+        if (event.button === 2) {
+        }
+      },
       onVertexCountChange(v: number) {
         saveData[KEY_VERTICES_COUNT] = v;
         profile.save(saveData);
@@ -163,7 +171,7 @@ export default defineComponent({
         painter.polygonLineWidth = v;
       },
       onTextareaChange(val: string) {
-        if (val.startsWith("")) {
+        if (val.startsWith("'")) {
           val = val.substring(1, val.length);
         }
         if (val.endsWith("'")) {
@@ -171,8 +179,8 @@ export default defineComponent({
         }
         const items = val.split(",").map((item) => item.trim());
         const arrayWith4 = [];
-        const len = 4;
-        // 变成4个一组
+        const len = step.value;
+        // 变成一组数据一行
         while (items.length) {
           const ar = items.splice(0, len);
           arrayWith4.push(ar);
