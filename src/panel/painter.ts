@@ -15,6 +15,9 @@ export class Painter {
   private _visiblePoint: boolean = true;
   public visiblePoint(b: boolean) {
     this._visiblePoint = b;
+    if (!b) {
+      this.removeInfoText();
+    }
     this.circles.forEach((item) => {
       if (b) {
         item.show();
@@ -45,7 +48,7 @@ export class Painter {
     }
   }
   private dotRadius = 6;
-  private polygon: Polyline;
+  private polygon: Polyline | null = null;
   private circles: Circle[] = [];
   /**
    *
@@ -94,24 +97,32 @@ export class Painter {
     return true;
   }
   public polygonLineWidth: number = 2;
+  private drawPoints: PointArray = new PointArray();
   private drawLines(points: PointArray) {
-    if (this.polygon) {
-      this.polygon.remove();
-      this.circles.map((item) => {
-        item.remove();
-      });
-      this.circles = [];
+    this.drawPoints = points;
+    this._createDot();
+    this._update();
+  }
+  private _updateDot() {
+    for (let i = 0; i < this.circles.length; i++) {
+      const item = this.circles[i];
+      const point = this.drawPoints[i]; // 虽然有可能对不上，但是概率都会很小
+      item.move(point[0] - this.dotRadius / 2 + this.offsetX, point[1] - this.dotRadius / 2 + this.offsetY);
     }
-    this.polygon = this.draw.polyline(points);
-    this.polygon.fill("none").stroke({ width: this.polygonLineWidth, color: "red" });
-    let index = 0;
-    points.forEach((point) => {
-      console.log(`${++index}: ${point[0]}, ${point[1]}`);
+  }
+  private _createDot() {
+    this.circles.map((item) => {
+      item.remove();
+    });
+    this.circles = [];
+    for (let i = 0; i < this.drawPoints.length; i++) {
+      const point = this.drawPoints[i];
+      console.log(`${i + 1}: ${point[0]}, ${point[1]}`);
       const item = this.draw.circle(this.dotRadius);
-      item.on("click", (e: PointerEvent) => {
+      item.on("mouseenter", (e: PointerEvent) => {
         e.stopPropagation();
         this.removeInfoText();
-        let info = `x:${point[0]}, y:${point[1]}\n`;
+        let info = `${i + 1}\nx:${point[0]}, y:${point[1]}\n`;
         info += `u:${point[0] / this.imageWidth}, v:${point[1] / this.imageHeight}`;
 
         const text = this.draw.text(info).stroke({ color: "red", width: 1 }).move(0, 0);
@@ -121,19 +132,19 @@ export class Painter {
         this.infoText = this.draw.group().add(bg).add(text).stroke("white");
 
         const offset = 6;
-        let x = point[0] + offset;
+        let x = point[0] + offset + this.offsetX;
         x = Math.min(x, this.width - rect.width);
-        let y = point[1] + offset;
+        let y = point[1] + offset + this.offsetY;
         y = Math.min(y, this.height - rect.height);
         this.infoText.move(x, y);
         this.infoText.on("click", (e: PointerEvent) => {
           e.stopPropagation();
         });
       });
-      item.css({ cursor: "pointer" });
+      item.css({ cursor: "pointer" }).fill("yellow");
       this.circles.push(item);
-      item.move(point[0] - this.dotRadius / 2, point[1] - this.dotRadius / 2).fill("yellow");
-    });
+    }
+    this.drawPoints.forEach((point) => {});
     this.visiblePoint(this._visiblePoint);
   }
   private removeInfoText() {
@@ -144,19 +155,58 @@ export class Painter {
   }
   private reset() {
     this.draw.clear();
+    this.polygon = this.draw.polyline([]);
+    this.polygon.fill("none").stroke({ width: this.polygonLineWidth, color: "red" });
   }
   private imageWidth: number = 1;
   private imageHeight: number = 1;
   public hasImageData: boolean = false;
+  private imgData: HTMLImageElement | null = null;
   public async drawImage(fullBase64: string): Promise<HTMLImageElement> {
     this.hasImageData = true;
+    this.offsetX = 0;
+    this.offsetY = 0;
     this.reset();
-    const imgData = await Base64.convertToImageData(fullBase64);
-    this.ctx.clearRect(0, 0, this.width, this.height);
-    this.ctx.drawImage(imgData, 0, 0, imgData.width, imgData.height);
-    this.imageWidth = imgData.width;
-    this.imageHeight = imgData.height;
-    return imgData;
+    this.imgData = await Base64.convertToImageData(fullBase64);
+    this._update();
+    return this.imgData;
+  }
+  private _update() {
+    const { imgData } = this;
+    if (imgData) {
+      this.ctx.clearRect(0, 0, this.width, this.height);
+      this.ctx.drawImage(imgData, this.offsetX, this.offsetY, imgData.width, imgData.height);
+      this.ctx.strokeStyle = "#ffffff";
+      this.ctx.strokeRect(this.offsetX, this.offsetY, imgData.width, imgData.height);
+      this.imageWidth = imgData.width;
+      this.imageHeight = imgData.height;
+    }
+    if (this.polygon) {
+      if (this.drawPoints.length) {
+        const newPoints: Array<ArrayXY> = [];
+        this.drawPoints.map((point) => {
+          newPoints.push([point[0] + this.offsetX, point[1] + this.offsetY]);
+        });
+        this.polygon.plot(newPoints);
+      } else {
+        this.polygon.plot([]);
+      }
+    }
+    this._updateDot();
+  }
+  private offsetX = 0;
+  private offsetY = 0;
+  public repaintWithOffset(e: MouseEvent) {
+    this.offsetX += e.movementX;
+    this.offsetY += e.movementY;
+    this.removeInfoText();
+    this._update();
+  }
+  public resetRender() {
+    this.offsetX = 0;
+    this.offsetY = 0;
+    this.removeInfoText();
+    this._update();
   }
 }
 export const painter = new Painter();

@@ -1,0 +1,8 @@
+{
+  "prettier.printWidth": 30000,
+  "prettier.tabWidth": 2,
+  "prettier.singleQuote": false,
+  "[vue]": {
+    "editor.defaultFormatter": "octref.vetur"
+  }
+}

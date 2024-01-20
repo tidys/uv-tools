@@ -7,7 +7,8 @@
       @dragover.prevent.stop
       @dragenter.prevent.stop
       @dragleave.prevent
-      @mousedown="onMouseDown"
+      @mousedown.prevent.stop="onMouseDown"
+      @contextmenu.prevent.stop=""
     >
       <canvas ref="canvas" style="position: absolute; z-index: 1"></canvas>
       <div
@@ -24,6 +25,11 @@
         "
       >
         {{ msg }}
+        <i
+          @click="onResetCanvas"
+          class="iconfont icon_refresh"
+          style="cursor: pointer; width: 20px; height: 20px"
+        ></i>
       </div>
     </div>
     <div
@@ -106,7 +112,11 @@ export default defineComponent({
   setup(props, { emit }) {
     const svg = ref<HTMLElement>(null);
     const rootEl = ref<HTMLElement>(null);
-
+    function setRootElementCursor(cursor: string) {
+      if (rootEl.value) {
+        rootEl.value.style.cursor = cursor;
+      }
+    }
     function updateImage(base64: string) {
       if (!base64) return;
       painter.drawImage(base64).then((el) => {
@@ -146,10 +156,22 @@ export default defineComponent({
       step,
       msg,
       onMouseDown(event: MouseEvent) {
-        // 如果是右键
+        // 右键拖动画布
         if (event.button === 2) {
+          setRootElementCursor("grab");
+          function mouseMove(e: MouseEvent) {
+            painter.repaintWithOffset(e);
+          }
+          function mouseUp(e: MouseEvent) {
+            setRootElementCursor("");
+            document.removeEventListener("mousemove", mouseMove);
+            document.removeEventListener("mouseup", mouseUp);
+          }
+          document.addEventListener("mousemove", mouseMove);
+          document.addEventListener("mouseup", mouseUp);
         }
       },
+
       onVertexCountChange(v: number) {
         saveData[KEY_VERTICES_COUNT] = v;
         profile.save(saveData);
@@ -169,6 +191,9 @@ export default defineComponent({
         saveData[KEY_POLYGON_LINE_WIDTH] = v;
         profile.save(saveData);
         painter.polygonLineWidth = v;
+      },
+      onResetCanvas() {
+        painter.resetRender();
       },
       onTextareaChange(val: string) {
         if (val.startsWith("'")) {
