@@ -15,21 +15,9 @@
         ref="svg"
         style="position: absolute; z-index: 2; overflow: hidden"
       ></div>
-      <div
-        style="
-          position: absolute;
-          z-index: 3;
-          bottom: 0;
-          right: 0;
-          user-select: none;
-        "
-      >
+      <div class="info">
         {{ msg }}
-        <i
-          @click="onResetCanvas"
-          class="iconfont icon_refresh"
-          style="cursor: pointer; width: 20px; height: 20px"
-        ></i>
+        <i @click="onResetCanvas" class="origin iconfont icon_origin"></i>
       </div>
     </div>
     <div
@@ -256,5 +244,23 @@ export default defineComponent({
   display: flex;
   flex-direction: row;
   height: 100%;
+  .info {
+    position: absolute;
+    z-index: 3;
+    bottom: 0;
+    right: 0;
+    user-select: none;
+    margin: 0 4px 4px 0;
+    .origin {
+      cursor: pointer;
+      box-sizing: content-box;
+      padding: 2px;
+      border: 1px solid transparent;
+      &:hover {
+        border: 1px solid #000;
+        border-radius: 4px;
+      }
+    }
+  }
 }
 </style>

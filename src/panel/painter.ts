@@ -13,6 +13,7 @@ export class Painter {
   private ctx: CanvasRenderingContext2D;
   private infoText: G | null = null;
   private _visiblePoint: boolean = true;
+  private opts: PainterOptions;
   public visiblePoint(b: boolean) {
     this._visiblePoint = b;
     if (!b) {
@@ -27,25 +28,43 @@ export class Painter {
     });
   }
   public init(opts: PainterOptions) {
+    this.opts = opts;
     const { canvas, svg, root } = opts;
-    const { width, height } = root.getBoundingClientRect();
-    this.width = width;
     this.canvas = canvas;
-    this.height = height;
-    this.canvas.setAttribute("width", width.toString());
-    this.canvas.setAttribute("height", height.toString());
     this.ctx = this.canvas.getContext("2d");
-    this.draw = SVG().addTo(svg).size(this.width, this.height);
+    this.draw = SVG().addTo(svg);
     this.draw.on("click", (e: PointerEvent) => {
       e.stopPropagation();
       this.removeInfoText();
     });
+
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.target === root) {
+          const { width, height } = entries[0].contentRect;
+          this.resize();
+          this.removeInfoText();
+          this._update();
+        }
+      }
+    });
+    observer.observe(root);
+
+    this.resize();
     this.reset();
 
     if (false) {
       //   const points = new PointArray([0, 0, 100, 50, width - 10, 0]);
       //   this.drawLines(points);
     }
+  }
+  private resize() {
+    const { width, height } = this.opts.root.getBoundingClientRect();
+    this.width = width;
+    this.height = height;
+    this.canvas.setAttribute("width", width.toString());
+    this.canvas.setAttribute("height", height.toString());
+    this.draw.size(this.width, this.height);
   }
   private dotRadius = 6;
   private polygon: Polyline | null = null;
