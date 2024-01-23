@@ -244,6 +244,7 @@ export default defineComponent({
   display: flex;
   flex-direction: row;
   height: 100%;
+  width: 100%;
   .info {
     position: absolute;
     z-index: 3;

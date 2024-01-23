@@ -28,7 +28,7 @@ const manifest: CocosPluginManifest = {
   ],
   menus: [
     {
-      path: `CC-Plugin/${i18n("title")}`,
+      path: `i18n.title`,
       message: {
         name: "showPanel",
       },
