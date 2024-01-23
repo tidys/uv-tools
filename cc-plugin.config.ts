@@ -11,8 +11,8 @@ function i18n(key: string) {
 const manifest: CocosPluginManifest = {
   name: pkgName,
   version: "1.0.0",
-  description: "这是cc-plugin create生成的示例插件项目",
-  author: "cc-plugin",
+  description: "在纹理上查看uv顶点，方便排查uv是否正确",
+  author: "xu_yanfeng",
   main: "./src/main.ts",
   panels: [
     {
