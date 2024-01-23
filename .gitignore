@@ -3,3 +3,4 @@ dist/
 web/
 .yalc/
 yalc.lock
+cc-plugin.json
