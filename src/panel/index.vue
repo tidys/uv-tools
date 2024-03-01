@@ -1,78 +1,31 @@
 <template>
   <div class="panel">
-    <div
-      ref="rootEl"
-      style="position: relative; flex: 1; overflow: hidden"
-      @drop.prevent="drop"
-      @dragover.prevent.stop
-      @dragenter.prevent.stop
-      @dragleave.prevent
-      @mousedown.prevent.stop="onMouseDown"
-      @contextmenu.prevent.stop=""
-    >
+    <div ref="rootEl" style="position: relative; flex: 1; overflow: hidden" @drop.prevent="drop" @dragover.prevent.stop @dragenter.prevent.stop @dragleave.prevent @mousedown.prevent.stop="onMouseDown" @contextmenu.prevent.stop="">
       <canvas ref="canvas" style="position: absolute; z-index: 1"></canvas>
-      <div
-        ref="svg"
-        style="position: absolute; z-index: 2; overflow: hidden"
-      ></div>
+      <div ref="svg" style="position: absolute; z-index: 2; overflow: hidden"></div>
       <div class="info">
         {{ msg }}
         <i @click="onResetCanvas" class="origin iconfont icon_origin"></i>
       </div>
     </div>
-    <div
-      style="
-        flex: 1;
-        height: 100%;
-        display: flex;
-        border-left: solid 1px black;
-        flex-direction: column;
-      "
-    >
+    <div style="flex: 1; height: 100%; display: flex; border-left: solid 1px black; flex-direction: column">
       <CCProp name="show point" align="left" tooltip="是否显示顶点">
         <CCCheckBox @change="onChangeVisiblePoint" :value="true"></CCCheckBox>
       </CCProp>
       <CCProp name="line width" tooltip="绘制多边形的线宽">
-        <CCInputNumber
-          v-model:value="polygonLineWidth"
-          :min="0.1"
-          :step="0.1"
-          @change="onChangePolygonLineWidth"
-        >
-        </CCInputNumber>
+        <CCInputNumber v-model:value="polygonLineWidth" :min="0.1" :step="0.1" @change="onChangePolygonLineWidth"> </CCInputNumber>
       </CCProp>
       <CCProp name="step" tooltip="一组顶点数据的长度，通常是count的倍数">
-        <CCInputNumber
-          :min="1"
-          :step="1"
-          v-model:value="step"
-          @change="onVertexStepChange"
-        ></CCInputNumber>
+        <CCInputNumber :min="1" :step="1" v-model:value="step" @change="onVertexStepChange"></CCInputNumber>
       </CCProp>
       <CCProp name="offset" tooltip="UV顶点在一组数据中的偏移量">
-        <CCInputNumber
-          :min="0"
-          :step="1"
-          v-model:value="vertexOffset"
-          @change="onVertexOffsetChange"
-        >
-        </CCInputNumber>
+        <CCInputNumber :min="0" :step="1" v-model:value="vertexOffset" @change="onVertexOffsetChange"> </CCInputNumber>
       </CCProp>
       <CCProp name="count" tooltip="UV顶点的数量">
-        <CCInputNumber
-          :min="0"
-          :step="1"
-          v-model:value="vertexCount"
-          @change="onVertexCountChange"
-          :disabled="true"
-        ></CCInputNumber>
+        <CCInputNumber :min="0" :step="1" v-model:value="vertexCount" @change="onVertexCountChange" :disabled="true"></CCInputNumber>
       </CCProp>
       <CCProp name="vertex" tooltip="顶点数据"></CCProp>
-      <CCTextarea
-        style="margin-left: 12px"
-        :data="points"
-        @change="onTextareaChange"
-      ></CCTextarea>
+      <CCTextarea style="margin-left: 12px" :data="points" @change="onTextareaChange"></CCTextarea>
       <CCButton style="margin-left: 12px" @click="onClickBtn">show uv</CCButton>
     </div>
   </div>
@@ -86,8 +39,7 @@ import { Accept, Drop } from "cc-plugin/src/ccp/util/drop";
 import profile, { Profile } from "cc-plugin/src/ccp/profile";
 import { Base64 } from "cc-plugin/src/ccp/util/base64";
 import CCP from "cc-plugin/src/ccp/entry-render";
-const { CCInput, CCButton, CCTextarea, CCProp, CCInputNumber, CCCheckBox } =
-  ccui.components;
+const { CCInput, CCButton, CCTextarea, CCProp, CCInputNumber, CCCheckBox } = ccui.components;
 const KEY_VERTICES = "vertices";
 const KEY_POLYGON_LINE_WIDTH = "polygonLineWidth";
 const KEY_VERTICES_OFFSET = "verticesOffset";
@@ -130,7 +82,11 @@ export default defineComponent({
     const points = ref(saveData[KEY_VERTICES] || "");
     const step = ref(saveData[KEY_VERTICES_STEP] || 4);
     const vertexCount = ref(saveData[KEY_VERTICES_COUNT] || 2);
-    const vertexOffset = ref(saveData[KEY_VERTICES_OFFSET] || 2);
+    let verticesOffset = saveData[KEY_VERTICES_OFFSET];
+    if (verticesOffset === undefined || verticesOffset < 0) {
+      verticesOffset = 2;
+    }
+    const vertexOffset = ref(verticesOffset);
     const polygonLineWidth = ref(saveData[KEY_POLYGON_LINE_WIDTH] || 2);
     painter.polygonLineWidth = polygonLineWidth.value;
     return {
@@ -212,12 +168,7 @@ export default defineComponent({
           return;
         }
         const p: string = toRaw(points.value);
-        painter.updatePoints(
-          p,
-          step.value,
-          vertexOffset.value,
-          vertexCount.value
-        );
+        painter.updatePoints(p, step.value, vertexOffset.value, vertexCount.value);
       },
       drop(event: DragEvent) {
         const drop = new Drop({
