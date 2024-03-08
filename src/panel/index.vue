@@ -168,7 +168,10 @@ export default defineComponent({
           return;
         }
         const p: string = toRaw(points.value);
-        painter.updatePoints(p, step.value, vertexOffset.value, vertexCount.value);
+        const errMsg = painter.updatePoints(p, step.value, vertexOffset.value, vertexCount.value);
+        if (errMsg) {
+          CCP.Adaptation.Dialog.message(errMsg);
+        }
       },
       drop(event: DragEvent) {
         const drop = new Drop({

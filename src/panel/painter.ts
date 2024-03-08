@@ -77,21 +77,29 @@ export class Painter {
    * @param step 一组数据的长度
    * @param offset 偏移量
    * @param len 数据的长度
+   * 返回值为错误信息
    */
-  public updatePoints(str: string, step: number = 4, offset: number = 2, len: number = 2): boolean {
+  public updatePoints(str: string, step: number = 4, offset: number = 2, len: number = 2): string {
     const points: number[] = [];
-    str.split(",").map((item) => {
+    const arr = str.split(",");
+    for (let i = 0; i < arr.length; i++) {
+      let item = arr[i];
       if (item.startsWith("\n")) {
         item = item.substring(1, item.length);
       }
       if (item) {
-        points.push(Number(item));
+        const num = Number(item);
+        if (Number.isNaN(num)) {
+          return `顶点数据(${item})不是数字`;
+        }
+
+        points.push(num);
       }
-    });
+    }
+
     const maxLen = points.length;
     if (maxLen % step !== 0) {
-      console.error("数据长度必须能被step整除");
-      return false;
+      return "数据长度必须能被step整除";
     }
 
     const newPoint: number[] = [];
@@ -102,6 +110,13 @@ export class Painter {
         const index = curIndex + offset + i;
         if (index < maxLen) {
           let point = points[index];
+          if (point > 1 || point < 0) {
+            if (step == 2 && offset == 0) {
+              return `顶点数据(${point})超过范围[0,1]`;
+            } else {
+              return `顶点数据(${point})超过范围[0,1]\n可能的原因:\n数据本身有问题\nstep(${step}) offset(${offset}) 参数设置异常导致`;
+            }
+          }
           if (i === 0) {
             point *= this.imageWidth;
           } else if (i === 1) {
@@ -115,7 +130,7 @@ export class Painter {
 
     const pointArray = new PointArray(newPoint);
     this.drawLines(pointArray);
-    return true;
+    return "";
   }
   public polygonLineWidth: number = 2;
   private drawPoints: PointArray = new PointArray();
@@ -231,11 +246,17 @@ export class Painter {
     this._update();
   }
   private calcCenterOffset() {
-    let minX = 0;
-    let minY = 0;
-    let maxX = 0;
-    let maxY = 0;
-    for (let i = 0; i < this.drawPoints.length; i++) {
+    const len = this.drawPoints.length;
+    if (!len) {
+      this.offsetX = this.offsetY = 0;
+      return;
+    }
+    const [a, b] = this.drawPoints[0];
+    let minX = a;
+    let minY = b;
+    let maxX = a;
+    let maxY = b;
+    for (let i = 0; i < len; i++) {
       const point = this.drawPoints[i];
       const [x, y] = point;
       minX = Math.min(minX, x);
