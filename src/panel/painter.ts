@@ -1,4 +1,6 @@
 import { Base64 } from "cc-plugin/src/ccp/util/base64";
+import Color from "color";
+import lerp from "lerp";
 import { PointArray, SVG, Svg, Text, G, ArrayXY, Polygon, Circle, Polyline, Rect } from "@svgdotjs/svg.js";
 export interface PainterOptions {
   root: HTMLElement;
@@ -21,9 +23,9 @@ export class Painter {
     }
     this.circles.forEach((item) => {
       if (b) {
-        item.show();
+        item.node.show();
       } else {
-        item.hide();
+        item.node.hide();
       }
     });
   }
@@ -68,7 +70,7 @@ export class Painter {
   }
   private dotRadius = 6;
   private polygon: Polyline | null = null;
-  private circles: Circle[] = [];
+  private circles: Array<{ radius: number; node: Circle }> = [];
   /**
    *
    * @param str
@@ -126,18 +128,21 @@ export class Painter {
     for (let i = 0; i < this.circles.length; i++) {
       const item = this.circles[i];
       const point = this.drawPoints[i]; // 虽然有可能对不上，但是概率都会很小
-      item.move(point[0] - this.dotRadius / 2 + this.offsetX, point[1] - this.dotRadius / 2 + this.offsetY);
+      const {radius}=item;
+      item.node.move(point[0] - radius / 2 + this.offsetX, point[1] - radius / 2 + this.offsetY);
     }
   }
   private _createDot() {
     this.circles.map((item) => {
-      item.remove();
+      item.node.remove();
     });
     this.circles = [];
     for (let i = 0; i < this.drawPoints.length; i++) {
       const point = this.drawPoints[i];
       console.log(`${i + 1}: ${point[0]}, ${point[1]}`);
-      const item = this.draw.circle(this.dotRadius);
+      const percent = i / this.drawPoints.length;
+      const radius = lerp(this.dotRadius, this.dotRadius * 2, percent);
+      const item = this.draw.circle(radius);
       item.on("mouseenter", (e: PointerEvent) => {
         e.stopPropagation();
         this.removeInfoText();
@@ -160,8 +165,11 @@ export class Painter {
           e.stopPropagation();
         });
       });
-      item.css({ cursor: "pointer" }).fill("yellow");
-      this.circles.push(item);
+      const color1 = Color("yellow");
+      const destColor = color1.mix(Color("green"), percent);
+      const colorHex = destColor.hex();
+      item.css({ cursor: "pointer" }).fill(colorHex);
+      this.circles.push({ radius: radius, node: item });
     }
     this.drawPoints.forEach((point) => {});
     this.visiblePoint(this._visiblePoint);

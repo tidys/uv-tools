@@ -2,10 +2,10 @@
     "author": "cc-plugin",
     "description": "cocos creator plugin",
     "devDependencies": {
+        "@svgdotjs/svg.js": "^3.2.0",
         "@types/fs-extra": "9.0.1",
         "@types/node": "16.11.12",
         "@xuyanfeng/cc-ui": "0.2.15",
-        "@svgdotjs/svg.js": "^3.2.0",
         "cc-plugin": "2.1.27"
     },
     "name": "cc-plugin-demo",
@@ -19,5 +19,9 @@
         "ccp-serve-web": "cc-plugin serve web"
     },
     "version": "1.0.0",
-    "dependencies": {}
+    "dependencies": {
+        "@types/color": "^3.0.6",
+        "color": "^4.2.3",
+        "lerp": "^1.0.3"
+    }
 }
