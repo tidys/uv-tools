@@ -10,7 +10,7 @@ function i18n(key: string) {
 
 const manifest: CocosPluginManifest = {
   name: pkgName,
-  version: "1.0.0",
+  version: "1.0.1",
   description: "在纹理上查看uv顶点，方便排查uv是否正确",
   author: "xu_yanfeng",
   main: "./src/main.ts",
