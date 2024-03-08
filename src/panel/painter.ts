@@ -122,13 +122,14 @@ export class Painter {
   private drawLines(points: PointArray) {
     this.drawPoints = points;
     this._createDot();
+    this.calcCenterOffset();
     this._update();
   }
   private _updateDot() {
     for (let i = 0; i < this.circles.length; i++) {
       const item = this.circles[i];
       const point = this.drawPoints[i]; // 虽然有可能对不上，但是概率都会很小
-      const {radius}=item;
+      const { radius } = item;
       item.node.move(point[0] - radius / 2 + this.offsetX, point[1] - radius / 2 + this.offsetY);
     }
   }
@@ -229,10 +230,29 @@ export class Painter {
     this.removeInfoText();
     this._update();
   }
+  private calcCenterOffset() {
+    let minX = 0;
+    let minY = 0;
+    let maxX = 0;
+    let maxY = 0;
+    for (let i = 0; i < this.drawPoints.length; i++) {
+      const point = this.drawPoints[i];
+      const [x, y] = point;
+      minX = Math.min(minX, x);
+      minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x);
+      maxY = Math.max(maxY, y);
+    }
+    const width = maxX - minX;
+    const height = maxY - minY;
+    const centerX = minX + width / 2;
+    const centerY = minY + height / 2;
+    this.offsetX = this.width / 2 - centerX;
+    this.offsetY = this.height / 2 - centerY;
+  }
   public resetRender() {
-    this.offsetX = 0;
-    this.offsetY = 0;
     this.removeInfoText();
+    this.calcCenterOffset();
     this._update();
   }
 }
